@@ -1,0 +1,28 @@
+name: Test browser demo
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run project tests
+        run: python -m unittest discover -s tests -v
+      - name: Check JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text()
+          js=re.search(r'<script>(.*?)</script>',s,re.S)
+          assert js, 'script missing'
+          Path('/tmp/boat-demo.js').write_text(js.group(1))
+          PY
+          node --check /tmp/boat-demo.js
