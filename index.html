@@ -1,0 +1,508 @@
+<title>競艇大当たり予想</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
+<style>
+/* Layout: sticky header + venue tabs, scrollable race cards */
+:root {
+  --bg:    #080d1a;
+  --bg2:   #0f1729;
+  --bg3:   #182036;
+  --fg:    #eef2ff;
+  --fg2:   #7788aa;
+  --gold:  #f5c518;
+  --blue:  #3b82f6;
+  --red:   #ef4444;
+  --purple:#a855f7;
+  --green: #22c55e;
+  --orange:#f97316;
+  --r:     8px;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--fg);
+  font-family:'Noto Sans JP',sans-serif;
+  min-height:100vh;
+  padding-bottom:52px;
+}
+body::before{
+  content:"";position:fixed;inset:0 0 auto;
+  height:env(safe-area-inset-top,0px);
+  background:var(--bg2);z-index:21;
+}
+/* ---- Header ---- */
+.hdr{
+  background:var(--bg2);
+  border-bottom:2px solid var(--gold);
+  padding:10px max(16px,env(safe-area-inset-left,0px));
+  position:sticky;
+  top:env(safe-area-inset-top,0px);
+  z-index:20;
+}
+.hdr-top{display:flex;justify-content:space-between;align-items:center}
+.brand{font-size:19px;font-weight:900;color:var(--gold);letter-spacing:.04em}
+.brand-sub{font-size:10px;font-weight:500;color:var(--fg2);margin-left:6px;vertical-align:middle}
+.clock{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--fg)}
+.hdr-info{margin-top:5px;font-size:11px;color:var(--fg2);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.badge-v{background:#1a2a40;border:1px solid #2a4060;padding:2px 10px;border-radius:20px;color:var(--gold);font-weight:700;font-size:11px}
+.hit-rate{color:var(--green);font-weight:700}
+/* ---- Venue tabs ---- */
+.tabs-wrap{
+  overflow-x:auto;white-space:nowrap;
+  padding:8px max(16px,env(safe-area-inset-left,0px));
+  background:var(--bg2);
+  border-bottom:1px solid #182036;
+  scrollbar-width:none;
+}
+.tabs-wrap::-webkit-scrollbar{display:none}
+.tab{
+  display:inline-block;padding:5px 14px;margin-right:6px;
+  border-radius:20px;border:1px solid #2a3a55;
+  background:transparent;color:var(--fg2);
+  font-size:12px;font-family:inherit;cursor:pointer;
+  transition:all .18s;
+}
+.tab.on{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700}
+/* ---- Main ---- */
+.main{
+  padding:12px max(16px,env(safe-area-inset-left,0px)) 20px;
+}
+.venue-title{font-size:13px;color:var(--fg2);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bg3)}
+.venue-title strong{color:var(--fg);font-weight:700}
+/* ---- Yesterday results ---- */
+.yesterday{
+  background:var(--bg2);border:1px solid #2a3040;border-left:3px solid var(--gold);
+  border-radius:var(--r);padding:9px 12px;margin-bottom:12px;font-size:12px;
+  display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;
+}
+.yday-label{color:var(--gold);font-weight:700;white-space:nowrap}
+.yday-items{display:flex;gap:8px;flex-wrap:wrap}
+.yday-item{background:var(--bg3);padding:2px 8px;border-radius:4px;font-variant-numeric:tabular-nums;font-size:11px}
+.yday-item .pay{color:var(--green);font-weight:700}
+/* ---- Race card ---- */
+.card{background:var(--bg2);border-radius:var(--r);border:1px solid #182036;overflow:hidden;margin-bottom:10px}
+.card-hdr{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;background:var(--bg3)}
+.r-num{font-size:14px;font-weight:700}
+.r-time{font-size:12px;color:var(--fg2);font-variant-numeric:tabular-nums}
+.badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px}
+.b-wait{background:#1f1800;color:var(--orange);border:1px solid #f9731630}
+.b-open{background:#0d2010;color:var(--green);border:1px solid #22c55e30;animation:blink 1.6s infinite}
+.b-done{background:#111318;color:#445;border:1px solid #22273040}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.6}}
+/* ---- Waiting ---- */
+.wait-body{padding:14px;text-align:center}
+.wait-icon{font-size:22px;margin-bottom:4px}
+.wait-txt{font-size:12px;color:var(--orange);font-weight:700;margin-bottom:2px}
+.wait-sub{font-size:11px;color:var(--fg2)}
+.wait-soon{font-size:11px;color:#ff9944;margin-top:4px;font-weight:600}
+/* ---- Predictions ---- */
+.pred-wrap{padding:12px 14px}
+.pred-comment{font-size:11px;color:var(--fg2);margin-bottom:10px;padding:7px 10px;background:var(--bg3);border-radius:6px;border-left:3px solid var(--gold);line-height:1.7}
+/* Boat comments table */
+.boat-table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:11px}
+.boat-table th{background:var(--bg3);color:var(--fg2);padding:4px 8px;text-align:left;font-weight:500}
+.boat-table td{padding:4px 8px;border-top:1px solid #182036}
+.boat-no{font-weight:700;font-variant-numeric:tabular-nums;width:28px}
+.bn1{color:#fff}
+.bn2{color:#000;background:#111;display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;border-radius:2px}
+.bn2.c1{background:#fff;color:#000}
+.bn2.c2{background:#222;color:#fff}
+.bn2.c3{background:#c00;color:#fff}
+.bn2.c4{background:#00a;color:#fff}
+.bn2.c5{background:#ff0;color:#000}
+.bn2.c6{background:#0a0;color:#fff}
+.boat-comment{color:var(--fg)}
+.boat-eval{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:700;white-space:nowrap}
+.ev-good{background:#0d2010;color:var(--green)}
+.ev-mid{background:#1a1a00;color:#cc0}
+.ev-bad{background:#200808;color:var(--red)}
+/* Prediction grid */
+.pred-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.pbox{background:var(--bg);border-radius:var(--r);padding:10px 12px;border:1px solid #182036}
+.plabel{font-size:10px;color:var(--fg2);margin-bottom:3px;font-weight:500}
+.pval{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.pval.c-blue{color:var(--blue)}
+.pval.c-purple{color:var(--purple)}
+.pval.c-red{color:var(--red)}
+.pval.c-gold{color:var(--gold)}
+.phint{font-size:10px;color:var(--fg2);margin-top:2px}
+/* Payout simulator */
+.sim-wrap{background:var(--bg3);border-radius:6px;padding:10px 12px;margin-bottom:4px}
+.sim-title{font-size:11px;color:var(--gold);font-weight:700;margin-bottom:7px}
+.sim-btns{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.sim-btn{
+  padding:4px 12px;border-radius:4px;border:1px solid #334;
+  background:var(--bg2);color:var(--fg2);font-size:12px;font-family:inherit;cursor:pointer;
+  transition:all .15s;
+}
+.sim-btn.on{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700}
+.sim-result{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px}
+.sim-row{background:var(--bg2);padding:5px 8px;border-radius:4px;display:flex;justify-content:space-between;align-items:center}
+.sim-label{color:var(--fg2)}
+.sim-pay{font-weight:700;font-variant-numeric:tabular-nums;color:var(--green)}
+/* Footer */
+.card-footer{padding:5px 14px 8px;font-size:10px;color:#334;text-align:center;border-top:1px solid #182036}
+/* Done */
+.done-body{padding:10px 14px;color:#445;font-size:12px;text-align:center}
+/* ---- LINE bar ---- */
+.line-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:#06c755;padding:12px;text-align:center;
+  font-size:13px;font-weight:700;color:#fff;
+  cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;gap:6px;
+  padding-bottom:max(12px,env(safe-area-inset-bottom,0px));
+}
+.line-bar span{font-size:16px}
+/* ---- Modal overlay for LINE ---- */
+.modal{display:none;position:fixed;inset:0;background:#000a;z-index:30;align-items:center;justify-content:center}
+.modal.show{display:flex}
+.modal-box{background:var(--bg2);border:1px solid #2a3a55;border-radius:12px;padding:24px;max-width:300px;width:90%;text-align:center}
+.modal-box h3{color:var(--gold);font-size:16px;margin-bottom:8px}
+.modal-box p{color:var(--fg2);font-size:12px;line-height:1.7;margin-bottom:16px}
+.modal-close{background:var(--bg3);border:1px solid #334;color:var(--fg);padding:8px 24px;border-radius:6px;font-family:inherit;cursor:pointer;font-size:13px}
+</style>
+
+<!-- Header -->
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="brand">競艇大当たり予想<span class="brand-sub">BOAT RACE PREDICTION</span></div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+  <div class="hdr-info">
+    <span id="today-date"></span>
+    <span class="badge-v" id="venue-count">本日0場開催</span>
+    <span class="hit-rate">先月的中率 <strong>63%</strong></span>
+  </div>
+</div>
+
+<!-- Venue tabs -->
+<div class="tabs-wrap" id="tabs"></div>
+
+<!-- Main -->
+<div class="main">
+  <div class="venue-title" id="vtitle"></div>
+  <div id="yesterday-box"></div>
+  <div id="races"></div>
+</div>
+
+<!-- LINE bar -->
+<div class="line-bar" id="line-bar">
+  <span>📲</span> LINE通知で予想をリアルタイム受け取る（無料登録）
+</div>
+
+<!-- LINE modal -->
+<div class="modal" id="line-modal">
+  <div class="modal-box">
+    <h3>📲 LINE通知登録</h3>
+    <p>レース5〜8分前に自動通知！<br>会員登録で無料でお届けします。<br><br>友だち追加後「通知ON」と送信してください。</p>
+    <button class="modal-close" id="modal-close">とじる</button>
+  </div>
+</div>
+
+<script>
+// ===================================
+// 毎日ここを更新！ 開催場リスト
+// 開催日、会場名、シリーズ名、発走開始時刻(sh=時,sm=分)
+// ===================================
+const VENUES = [
+  { name:'桐生',   series:'第38回日本モーターボート選手会会長杯', sh:11, sm:0  },
+  { name:'江戸川', series:'第2回Sammyカップ',                    sh:10, sm:30 },
+  { name:'平和島', series:'第1回FC東京杯',                       sh:10, sm:15 },
+  { name:'常滑',   series:'マリンキング決定戦',                  sh:10, sm:30 },
+  { name:'津',     series:'津オールレディース マクール杯',       sh:10, sm:20 },
+  { name:'三国',   series:'新東通信杯',                         sh:10, sm:30 },
+  { name:'びわこ', series:'びわこお魚0929CUP',                  sh:11, sm:0  },
+  { name:'住之江', series:'第54回高松宮記念特別競走',           sh:10, sm:30 },
+  { name:'丸亀',   series:'楽天銀行賞',                         sh:10, sm:0  },
+  { name:'宮島',   series:'ルーキーシリーズ第21戦',             sh:10, sm:0  },
+  { name:'芦屋',   series:'BTS開設15周年記念',                  sh:10, sm:0  },
+  { name:'福岡',   series:'ばんえい十勝杯',                     sh:10, sm:30 },
+];
+
+const TODAY = new Date();
+const DATENUM = TODAY.getFullYear()*10000+(TODAY.getMonth()+1)*100+TODAY.getDate();
+
+function seeded(s){ const x=Math.sin(s+1)*10000; return x-Math.floor(x); }
+
+const BOAT_POSITIVE=['モーター出足◎','展示タイム最速','スタート安定','前付け積極的','ターン巧み','気配抜群'];
+const BOAT_NEUTRAL=['展示平均的','スタート普通','前走並み','モーター標準','ターン無難','様子見'];
+const BOAT_NEGATIVE=['スタートに不安','モーター出足×','展示タイム遅め','前走凡走','ターン膨らみ','気配イマイチ'];
+
+const SAFE_COMMENTS=[
+  '1号艇が抜群のスタート展示。展示タイムも上々で軸として信頼。',
+  '1号艇の前付けが決まる展開。スタート展示でも好調を確認。',
+  '1号艇モーター替え効果あり。2・3号艇の気配も上々。',
+  '1号艇が今節ベストのスタート展示。内枠有利な展開へ。',
+  '直前情報で1号艇の出足評価が上がった。内枠勢で固める。',
+];
+const BOLD_COMMENTS=[
+  '5・6号艇がダッシュで強気の展開。高配当狙いで。',
+  '外枠勢が激しく競り合う展開。万舟の可能性あり。',
+  '4・5号艇の展示タイムが際立って速い。逆転の一手。',
+  '6号艇が今節好調。穴狙いに最適な気配。',
+  '中穴以上を狙うなら今レース。外枠の仕掛けに注目。',
+];
+
+function getBoatEval(r){ return r<0.4?'good':r<0.7?'mid':'bad'; }
+function getBoatComment(r,ev){
+  const idx=Math.floor(r*6);
+  return ev==='good'?BOAT_POSITIVE[idx%6]:ev==='mid'?BOAT_NEUTRAL[idx%6]:BOAT_NEGATIVE[idx%6];
+}
+const EV_LABEL={'good':'好調','mid':'普通','bad':'不調'};
+
+function getPreds(vi, ri){
+  const base=DATENUM+vi*1000+ri*7;
+  const r1=seeded(base);
+  const sec=r1<0.5?2:3;
+  const nirenF=`1-${sec}`;
+  const others=[2,3,4,5,6].filter(n=>n!==sec);
+  const r2=seeded(base+1);
+  const thr=others[Math.floor(r2*others.length)];
+  const sanF=[1,sec,thr].sort((a,b)=>a-b).join('-');
+  const boldPairs=[[6,4],[6,5],[5,4],[5,3],[4,6],[6,3],[5,6],[4,5]];
+  const r3=seeded(base+2);
+  const pair=boldPairs[Math.floor(r3*boldPairs.length)];
+  const nirenT=pair.join('-');
+  const rem=[1,2,3,4,5,6].filter(n=>!pair.includes(n));
+  const r4=seeded(base+3);
+  const t3=rem[Math.floor(r4*rem.length)];
+  const sanT=[...pair,t3].join('-');
+  const r5=seeded(base+4);
+  const safeC=SAFE_COMMENTS[Math.floor(r5*SAFE_COMMENTS.length)];
+  const r6=seeded(base+5);
+  const boldC=BOLD_COMMENTS[Math.floor(r6*BOLD_COMMENTS.length)];
+  // odds
+  const nFOdds=(2+seeded(base+6)*3).toFixed(1);
+  const nTOdds=(5+seeded(base+7)*15).toFixed(1);
+  const sFOdds=(8+seeded(base+8)*20).toFixed(1);
+  const sTOdds=(30+seeded(base+9)*200).toFixed(0);
+  // boats
+  const boats=[];
+  for(let b=1;b<=6;b++){
+    const br=seeded(base+b*10);
+    const ev=getBoatEval(br);
+    const bc=getBoatComment(seeded(base+b*10+1),ev);
+    boats.push({num:b,ev,comment:bc});
+  }
+  return {nirenF,nirenT,sanF,sanT,safeC,boldC,nFOdds,nTOdds,sFOdds,sTOdds,boats};
+}
+
+function getRaceTimes(v){
+  const ts=[];let h=v.sh,m=v.sm;
+  for(let i=0;i<12;i++){
+    ts.push({h,m});
+    m+=25;if(m>=60){h++;m-=60;}
+  }
+  return ts;
+}
+
+function getStatus(rt,now){
+  const rm=rt.h*60+rt.m;
+  const nm=now.getHours()*60+now.getMinutes();
+  const diff=rm-nm;
+  if(diff>7) return {s:'wait',diff};
+  if(diff>=-15) return {s:'open',diff};
+  return {s:'done',diff};
+}
+
+function pad2(n){return String(n).padStart(2,'0')}
+function formatTime(rt){return `${pad2(rt.h)}:${pad2(rt.m)}`}
+
+// Yesterday fake results
+function getYesterday(vi){
+  const base=DATENUM-1+vi*500;
+  const results=[];
+  for(let i=0;i<3;i++){
+    const race=Math.floor(seeded(base+i)*12)+1;
+    const type=i===0?'3連単':i===1?'2連単':'3連複';
+    const a=Math.floor(seeded(base+i+10)*6)+1;
+    let b=Math.floor(seeded(base+i+20)*6)+1;
+    if(b===a)b=b%6+1;
+    let c=Math.floor(seeded(base+i+30)*6)+1;
+    while(c===a||c===b)c=c%6+1;
+    const combo=type==='3連複'?[a,b,c].sort((x,y)=>x-y).join('-'):`${a}-${b}-${c}`;
+    const pay=type==='3連単'?Math.floor(5000+seeded(base+i+40)*45000):
+              type==='2連単'?Math.floor(1000+seeded(base+i+40)*9000):
+                             Math.floor(500+seeded(base+i+40)*4500);
+    results.push({race,type,combo,pay:pay.toLocaleString()});
+  }
+  return results;
+}
+
+let currentVenue=0;
+let selectedAmt={};
+
+function renderTabs(){
+  const tb=document.getElementById('tabs');
+  tb.innerHTML='';
+  VENUES.forEach((v,i)=>{
+    const btn=document.createElement('button');
+    btn.className='tab'+(i===currentVenue?' on':'');
+    btn.textContent=v.name;
+    btn.onclick=()=>{currentVenue=i;selectedAmt={};renderTabs();renderMain();};
+    tb.appendChild(btn);
+  });
+}
+
+function renderMain(){
+  const now=new Date();
+  const v=VENUES[currentVenue];
+  const times=getRaceTimes(v);
+
+  document.getElementById('vtitle').innerHTML=
+    `<strong>ボートレース${v.name}</strong>　${v.series}`;
+
+  // yesterday
+  const yd=getYesterday(currentVenue);
+  const ydBox=document.getElementById('yesterday-box');
+  ydBox.innerHTML=`<div class="yesterday">
+    <span class="yday-label">昨日の結果</span>
+    <div class="yday-items">${yd.map(r=>
+      `<span class="yday-item">R${r.race} ${r.type} ${r.combo} <span class="pay">¥${r.pay}</span></span>`
+    ).join('')}</div>
+  </div>`;
+
+  const rc=document.getElementById('races');
+  rc.innerHTML='';
+  times.forEach((rt,i)=>{
+    const ri=i+1;
+    const st=getStatus(rt,now);
+    const p=getPreds(currentVenue,ri);
+    const card=document.createElement('div');
+    card.className='card';
+    let inner='';
+    // header
+    const badge=st.s==='wait'
+      ?`<span class="badge b-wait">事前・直前情報待ち</span>`
+      :st.s==='open'
+      ?`<span class="badge b-open">▶ 予想公開中</span>`
+      :`<span class="badge b-done">発走済</span>`;
+    inner+=`<div class="card-hdr">
+      <span class="r-num">第${ri}レース</span>
+      <span class="r-time">${formatTime(rt)} 発走</span>
+      ${badge}
+    </div>`;
+    if(st.s==='wait'){
+      let soon='';
+      if(st.diff<=30) soon=`<div class="wait-soon">⏳ あと約${st.diff}分で予想公開</div>`;
+      inner+=`<div class="wait-body">
+        <div class="wait-icon">📡</div>
+        <div class="wait-txt">事前・直前情報 収集中...</div>
+        <div class="wait-sub">展示タイム・スタート展示・選手コメント 情報待ち</div>
+        ${soon}
+      </div>`;
+    } else if(st.s==='open'){
+      // boat colors
+      const cls=['c1','c2','c3','c4','c5','c6'];
+      const boatRows=p.boats.map(b=>{
+        const ev=b.ev;
+        return `<tr>
+          <td class="boat-no"><span class="bn2 ${cls[b.num-1]}">${b.num}</span></td>
+          <td class="boat-comment">${b.comment}</td>
+          <td><span class="boat-eval ev-${ev}">${EV_LABEL[ev]}</span></td>
+        </tr>`;
+      }).join('');
+      // sim
+      const amt=selectedAmt[ri]||100;
+      const simId=`sim-${ri}`;
+      inner+=`<div class="pred-wrap">
+        <div class="pred-comment">
+          🔵 安定軸：${p.safeC}<br>
+          🔴 大穴狙：${p.boldC}
+        </div>
+        <table class="boat-table">
+          <tr><th>艇</th><th>直前コメント</th><th>気配</th></tr>
+          ${boatRows}
+        </table>
+        <div class="pred-grid">
+          <div class="pbox">
+            <div class="plabel">2連複 ◆安定</div>
+            <div class="pval c-blue">${p.nirenF}</div>
+            <div class="phint">推定オッズ ${p.nFOdds}倍</div>
+          </div>
+          <div class="pbox">
+            <div class="plabel">2連単 ◆穴</div>
+            <div class="pval c-red">${p.nirenT}</div>
+            <div class="phint">推定オッズ ${p.nTOdds}倍</div>
+          </div>
+          <div class="pbox">
+            <div class="plabel">3連複 ◆安定</div>
+            <div class="pval c-purple">${p.sanF}</div>
+            <div class="phint">推定オッズ ${p.sFOdds}倍</div>
+          </div>
+          <div class="pbox">
+            <div class="plabel">3連単 ◆本命穴</div>
+            <div class="pval c-gold">${p.sanT}</div>
+            <div class="phint">推定オッズ ${p.sTOdds}倍</div>
+          </div>
+        </div>
+        <div class="sim-wrap" id="${simId}">
+          <div class="sim-title">💴 払い戻しシミュレーター</div>
+          <div class="sim-btns">
+            ${[100,300,500,1000,3000].map(a=>
+              `<button class="sim-btn${a===amt?' on':''}" onclick="selectAmt(${ri},${a},'${simId}',${p.nFOdds},${p.nTOdds},${p.sFOdds},${p.sTOdds})">${a.toLocaleString()}円</button>`
+            ).join('')}
+          </div>
+          <div class="sim-result" id="${simId}-res">
+            ${simResult(amt,p.nFOdds,p.nTOdds,p.sFOdds,p.sTOdds)}
+          </div>
+        </div>
+        <div class="card-footer">※本予想はエンタメ目的のダミーです。賭けは自己責任で。</div>
+      </div>`;
+    } else {
+      inner+=`<div class="done-body">レース終了</div>`;
+    }
+    card.innerHTML=inner;
+    rc.appendChild(card);
+  });
+}
+
+function simResult(amt,nF,nT,sF,sT){
+  return `
+    <div class="sim-row"><span class="sim-label">2連複</span><span class="sim-pay">¥${Math.round(amt*nF).toLocaleString()}</span></div>
+    <div class="sim-row"><span class="sim-label">2連単</span><span class="sim-pay">¥${Math.round(amt*nT).toLocaleString()}</span></div>
+    <div class="sim-row"><span class="sim-label">3連複</span><span class="sim-pay">¥${Math.round(amt*sF).toLocaleString()}</span></div>
+    <div class="sim-row"><span class="sim-label">3連単</span><span class="sim-pay">¥${Math.round(amt*sT).toLocaleString()}</span></div>`;
+}
+
+function selectAmt(ri,amt,simId,nF,nT,sF,sT){
+  selectedAmt[ri]=amt;
+  const wrap=document.getElementById(simId);
+  wrap.querySelectorAll('.sim-btn').forEach(b=>{
+    b.classList.toggle('on',b.textContent===amt.toLocaleString()+'円');
+  });
+  document.getElementById(simId+'-res').innerHTML=simResult(amt,nF,nT,sF,sT);
+}
+
+function updateClock(){
+  const now=new Date();
+  document.getElementById('clock').textContent=
+    `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
+}
+
+function init(){
+  const now=new Date();
+  const y=now.getFullYear(),mo=now.getMonth()+1,d=now.getDate();
+  const days=['日','月','火','水','木','金','土'];
+  document.getElementById('today-date').textContent=`${y}年${mo}月${d}日（${days[now.getDay()]}）`;
+  document.getElementById('venue-count').textContent=`本日${VENUES.length}場開催`;
+  renderTabs();
+  renderMain();
+  updateClock();
+  setInterval(updateClock,1000);
+  setInterval(renderMain,30000);
+}
+
+document.getElementById('line-bar').onclick=()=>{
+  document.getElementById('line-modal').classList.add('show');
+};
+document.getElementById('modal-close').onclick=()=>{
+  document.getElementById('line-modal').classList.remove('show');
+};
+document.getElementById('line-modal').onclick=(e)=>{
+  if(e.target===e.currentTarget) e.currentTarget.classList.remove('show');
+};
+
+init();
+</script>
