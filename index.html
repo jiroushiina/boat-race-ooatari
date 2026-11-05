@@ -24,7 +24,7 @@ body{
   color:var(--fg);
   font-family:'Noto Sans JP',sans-serif;
   min-height:100vh;
-  padding-bottom:52px;
+  padding-bottom:16px;
 }
 body::before{
   content:"";position:fixed;inset:0 0 auto;
@@ -135,22 +135,6 @@ body::before{
 .card-footer{padding:5px 14px 8px;font-size:10px;color:#334;text-align:center;border-top:1px solid #182036}
 /* Done */
 .done-body{padding:10px 14px;color:#445;font-size:12px;text-align:center}
-/* ---- LINE bar ---- */
-.line-bar{
-  position:fixed;bottom:0;left:0;right:0;
-  background:#06c755;padding:12px;text-align:center;
-  font-size:13px;font-weight:700;color:#fff;
-  cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;gap:6px;
-  padding-bottom:max(12px,env(safe-area-inset-bottom,0px));
-}
-.line-bar span{font-size:16px}
-/* ---- Modal overlay for LINE ---- */
-.modal{display:none;position:fixed;inset:0;background:#000a;z-index:30;align-items:center;justify-content:center}
-.modal.show{display:flex}
-.modal-box{background:var(--bg2);border:1px solid #2a3a55;border-radius:12px;padding:24px;max-width:300px;width:90%;text-align:center}
-.modal-box h3{color:var(--gold);font-size:16px;margin-bottom:8px}
-.modal-box p{color:var(--fg2);font-size:12px;line-height:1.7;margin-bottom:16px}
-.modal-close{background:var(--bg3);border:1px solid #334;color:var(--fg);padding:8px 24px;border-radius:6px;font-family:inherit;cursor:pointer;font-size:13px}
 </style>
 
 <!-- Header -->
@@ -175,19 +159,6 @@ body::before{
   <div id="races"></div>
 </div>
 
-<!-- LINE bar -->
-<div class="line-bar" id="line-bar">
-  <span>📲</span> LINE通知で予想をリアルタイム受け取る（無料登録）
-</div>
-
-<!-- LINE modal -->
-<div class="modal" id="line-modal">
-  <div class="modal-box">
-    <h3>📲 LINE通知登録</h3>
-    <p>レース5〜8分前に自動通知！<br>会員登録で無料でお届けします。<br><br>友だち追加後「通知ON」と送信してください。</p>
-    <button class="modal-close" id="modal-close">とじる</button>
-  </div>
-</div>
 
 <script>
 // ===================================
@@ -478,15 +449,6 @@ function init(){
   setInterval(renderMain,30000);
 }
 
-document.getElementById('line-bar').onclick=()=>{
-  document.getElementById('line-modal').classList.add('show');
-};
-document.getElementById('modal-close').onclick=()=>{
-  document.getElementById('line-modal').classList.remove('show');
-};
-document.getElementById('line-modal').onclick=(e)=>{
-  if(e.target===e.currentTarget) e.currentTarget.classList.remove('show');
-};
 
 init();
 </script>
