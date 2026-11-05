@@ -270,13 +270,16 @@ function getPreds(vi, ri){
   else if(pos===1) sanArr=[others2[0],1,others2[1]];
   else sanArr=[others2[0],others2[1],1];
   sanF=sanArr.join('-');
-  const boldPairs=[[6,4],[6,5],[5,4],[5,3],[4,6],[6,3],[5,6],[4,5]];
+  const boldPairs=[[6,5],[5,6],[6,4],[4,6],[5,4],[4,5],[6,3],[3,6],[5,3],[3,5],[4,3],[3,4]];
   const r3=seeded(base+2);
   const pair=boldPairs[Math.floor(r3*boldPairs.length)];
   const nirenT=pair.join('-');
-  const rem=[1,2,3,4,5,6].filter(n=>!pair.includes(n));
+  // 3連単の3番目: 4,5,6を優先、たまに3、ほぼ1,2は出ない
+  const remAll=[1,2,3,4,5,6].filter(n=>!pair.includes(n));
+  const remHi=remAll.filter(n=>n>=3);
   const r4=seeded(base+3);
-  const t3=rem[Math.floor(r4*rem.length)];
+  const remPool=remHi.length>0?remHi:remAll;
+  const t3=remPool[Math.floor(r4*remPool.length)];
   const sanT=[...pair,t3].join('-');
   const r5=seeded(base+4);
   const safeC=SAFE_COMMENTS[Math.floor(r5*SAFE_COMMENTS.length)];
