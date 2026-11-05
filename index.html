@@ -431,16 +431,40 @@ function updateClock(){
     `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
 }
 
-function init(){
+async function fetchRealData(){
+  try{
+    const res=await fetch('/.netlify/functions/race-data');
+    if(!res.ok) return;
+    const data=await res.json();
+    if(data.venues && data.venues.length>0){
+      // Replace VENUES with real data (keep series from existing or use empty)
+      const seriesMap={};
+      VENUES.forEach(v=>{ seriesMap[v.jcd]=v.series||''; });
+      VENUES.length=0;
+      data.venues.forEach(v=>{
+        VENUES.push({
+          name: v.name,
+          jcd: v.jcd,
+          series: seriesMap[v.jcd]||'',
+          times: v.times
+        });
+      });
+    }
+  }catch(e){/* use hardcoded fallback */}
+}
+
+async function init(){
   const now=new Date();
   const y=now.getFullYear(),mo=now.getMonth()+1,d=now.getDate();
   const days=['日','月','火','水','木','金','土'];
   document.getElementById('today-date').textContent=`${y}年${mo}月${d}日（${days[now.getDay()]}）`;
+  document.getElementById('venue-count').textContent=`読み込み中...`;
+  updateClock();
+  setInterval(updateClock,1000);
+  await fetchRealData();
   document.getElementById('venue-count').textContent=`本日${VENUES.length}場開催`;
   renderTabs();
   renderMain();
-  updateClock();
-  setInterval(updateClock,1000);
   setInterval(renderMain,30000);
 }
 
