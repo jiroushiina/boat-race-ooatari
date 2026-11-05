@@ -253,9 +253,9 @@ function getPreds(vi, ri){
   const r3=seeded(base+2);
   const pair=boldPairs[Math.floor(r3*boldPairs.length)];
   const nirenT=pair.join('-');
-  const rem=[1,2,3,4,5,6].filter(n=>!pair.includes(n));
+  const rem=[3,4,5,6].filter(n=>!pair.includes(n));
   const r4=seeded(base+3);
-  const t3=rem[Math.floor(r4*rem.length)];
+  const t3=rem.length>0?rem[Math.floor(r4*rem.length)]:[2,3,4,5,6].filter(n=>!pair.includes(n))[0];
   const sanT=[...pair,t3].join('-');
   const r5=seeded(base+4);
   const safeC=SAFE_COMMENTS[Math.floor(r5*SAFE_COMMENTS.length)];
