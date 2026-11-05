@@ -70,16 +70,6 @@ body::before{
 }
 .venue-title{font-size:13px;color:var(--fg2);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bg3)}
 .venue-title strong{color:var(--fg);font-weight:700}
-/* ---- Yesterday results ---- */
-.yesterday{
-  background:var(--bg2);border:1px solid #2a3040;border-left:3px solid var(--gold);
-  border-radius:var(--r);padding:9px 12px;margin-bottom:12px;font-size:12px;
-  display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;
-}
-.yday-label{color:var(--gold);font-weight:700;white-space:nowrap}
-.yday-items{display:flex;gap:8px;flex-wrap:wrap}
-.yday-item{background:var(--bg3);padding:2px 8px;border-radius:4px;font-variant-numeric:tabular-nums;font-size:11px}
-.yday-item .pay{color:var(--green);font-weight:700}
 /* ---- Race card ---- */
 .card{background:var(--bg2);border-radius:var(--r);border:1px solid #182036;overflow:hidden;margin-bottom:10px}
 .card-hdr{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;background:var(--bg3)}
@@ -182,7 +172,6 @@ body::before{
 <!-- Main -->
 <div class="main">
   <div class="venue-title" id="vtitle"></div>
-  <div id="yesterday-box"></div>
   <div id="races"></div>
 </div>
 
@@ -309,26 +298,6 @@ function getStatus(rt,now){
 function pad2(n){return String(n).padStart(2,'0')}
 function formatTime(rt){return `${pad2(rt.h)}:${pad2(rt.m)}`}
 
-// Yesterday fake results
-function getYesterday(vi){
-  const base=DATENUM-1+vi*500;
-  const results=[];
-  for(let i=0;i<3;i++){
-    const race=Math.floor(seeded(base+i)*12)+1;
-    const type=i===0?'3連単':i===1?'2連単':'3連複';
-    const a=Math.floor(seeded(base+i+10)*6)+1;
-    let b=Math.floor(seeded(base+i+20)*6)+1;
-    if(b===a)b=b%6+1;
-    let c=Math.floor(seeded(base+i+30)*6)+1;
-    while(c===a||c===b)c=c%6+1;
-    const combo=type==='3連複'?[a,b,c].sort((x,y)=>x-y).join('-'):`${a}-${b}-${c}`;
-    const pay=type==='3連単'?Math.floor(5000+seeded(base+i+40)*45000):
-              type==='2連単'?Math.floor(1000+seeded(base+i+40)*9000):
-                             Math.floor(500+seeded(base+i+40)*4500);
-    results.push({race,type,combo,pay:pay.toLocaleString()});
-  }
-  return results;
-}
 
 let currentVenue=0;
 let selectedAmt={};
@@ -353,15 +322,6 @@ function renderMain(){
   document.getElementById('vtitle').innerHTML=
     `<strong>ボートレース${v.name}</strong>　${v.series}`;
 
-  // yesterday
-  const yd=getYesterday(currentVenue);
-  const ydBox=document.getElementById('yesterday-box');
-  ydBox.innerHTML=`<div class="yesterday">
-    <span class="yday-label">昨日の結果</span>
-    <div class="yday-items">${yd.map(r=>
-      `<span class="yday-item">R${r.race} ${r.type} ${r.combo} <span class="pay">¥${r.pay}</span></span>`
-    ).join('')}</div>
-  </div>`;
 
   const rc=document.getElementById('races');
   rc.innerHTML='';
