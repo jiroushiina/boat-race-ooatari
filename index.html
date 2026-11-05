@@ -251,15 +251,25 @@ function getPreds(vi, ri){
   // 3連複: 約40%の確率で1号艇+高め2艇(3,4,5,6)
   const rVar=seeded(base+11);
   let sanF;
+  // 3連複: 1号艇の位置をランダムに(1番目・2番目・3番目)
+  const rPos=seeded(base+14);
+  let sanArr;
   if(rVar<0.4){
     const hi=[3,4,5,6];
     const ra=seeded(base+12),rb=seeded(base+13);
     const ha=hi[Math.floor(ra*hi.length)];
     const hb=hi.filter(n=>n!==ha)[Math.floor(rb*(hi.length-1))];
-    sanF=[1,ha,hb].sort((a,b)=>a-b).join('-');
+    sanArr=[ha,hb,1];
   } else {
-    sanF=[1,sec,thr].sort((a,b)=>a-b).join('-');
+    sanArr=[sec,thr,1];
   }
+  // 1号艇の位置: 0=先頭,1=2番目,2=3番目
+  const pos=Math.floor(rPos*3);
+  const others2=sanArr.filter(n=>n!==1);
+  if(pos===0) sanArr=[1,others2[0],others2[1]];
+  else if(pos===1) sanArr=[others2[0],1,others2[1]];
+  else sanArr=[others2[0],others2[1],1];
+  sanF=sanArr.join('-');
   const boldPairs=[[6,4],[6,5],[5,4],[5,3],[4,6],[6,3],[5,6],[4,5]];
   const r3=seeded(base+2);
   const pair=boldPairs[Math.floor(r3*boldPairs.length)];
