@@ -248,7 +248,18 @@ function getPreds(vi, ri){
   const others=[2,3,4,5,6].filter(n=>n!==sec);
   const r2=seeded(base+1);
   const thr=others[Math.floor(r2*others.length)];
-  const sanF=[1,sec,thr].sort((a,b)=>a-b).join('-');
+  // 3連複: 約40%の確率で1号艇+高め2艇(3,4,5,6)
+  const rVar=seeded(base+11);
+  let sanF;
+  if(rVar<0.4){
+    const hi=[3,4,5,6];
+    const ra=seeded(base+12),rb=seeded(base+13);
+    const ha=hi[Math.floor(ra*hi.length)];
+    const hb=hi.filter(n=>n!==ha)[Math.floor(rb*(hi.length-1))];
+    sanF=[1,ha,hb].sort((a,b)=>a-b).join('-');
+  } else {
+    sanF=[1,sec,thr].sort((a,b)=>a-b).join('-');
+  }
   const boldPairs=[[6,4],[6,5],[5,4],[5,3],[4,6],[6,3],[5,6],[4,5]];
   const r3=seeded(base+2);
   const pair=boldPairs[Math.floor(r3*boldPairs.length)];
