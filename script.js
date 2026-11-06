@@ -172,7 +172,7 @@ function renderMain(){
         <div class="wait-sub">展示タイム・スタート展示・選手コメント 情報待ち</div>
         ${soon}
       </div>`;
-    } else if(st.s==='open'){
+    } else if(st.s==='open'||st.s==='done'){
       const cls=['c1','c2','c3','c4','c5','c6'];
       const boatRows=p.boats.map(b=>{
         const ev=b.ev;
@@ -228,8 +228,6 @@ function renderMain(){
         </div>
         <div class="card-footer">※本予想はエンタメ目的のダミーです。賭けは自己責任で。</div>
       </div>`;
-    } else {
-      inner+=`<div class="done-body">レース終了</div>`;
     }
     card.innerHTML=inner;
     rc.appendChild(card);
