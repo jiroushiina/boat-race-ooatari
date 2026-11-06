@@ -431,23 +431,33 @@ function updateClock(){
     `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
 }
 
+const VENUE_NAMES_MAP={1:'桐生',2:'戸田',3:'江戸川',4:'平和島',5:'多摩川',6:'浜名湖',7:'蒲郡',8:'常滑',9:'津',10:'三国',11:'びわこ',12:'住之江',13:'尼崎',14:'鳴門',15:'丸亀',16:'児島',17:'宮島',18:'徳山',19:'下関',20:'若松',21:'芦屋',22:'福岡',23:'唐津',24:'大村'};
+
 async function fetchRealData(){
   try{
-    const res=await fetch('/.netlify/functions/race-data');
+    const res=await fetch('https://boatraceopenapi.github.io/programs/v3/today.json',{cache:'no-store'});
     if(!res.ok) return;
     const data=await res.json();
-    if(data.venues && data.venues.length>0){
-      // Replace VENUES with real data (keep series from existing or use empty)
-      const seriesMap={};
-      VENUES.forEach(v=>{ seriesMap[v.jcd]=v.series||''; });
-      VENUES.length=0;
-      data.venues.forEach(v=>{
-        VENUES.push({
-          name: v.name,
-          jcd: v.jcd,
-          series: seriesMap[v.jcd]||'',
-          times: v.times
-        });
+    if(!data.programs||!data.programs.length) return;
+    // 会場ごとに発走時刻(締切時刻)を集める
+    const venueMap={};
+    for(const p of data.programs){
+      const sn=p.stadium_number;
+      if(!venueMap[sn]) venueMap[sn]={raceNums:[],times:[]};
+      venueMap[sn].raceNums.push(p.number);
+      // closed_at = "2026-11-06 10:25:00" → "10:25"
+      const t=p.closed_at?p.closed_at.slice(11,16):'';
+      venueMap[sn].times.push(t);
+    }
+    VENUES.length=0;
+    for(const sn of Object.keys(venueMap).map(Number).sort((a,b)=>a-b)){
+      const v=venueMap[sn];
+      const jcd=String(sn).padStart(2,'0');
+      VENUES.push({
+        name: VENUE_NAMES_MAP[sn]||`会場${sn}`,
+        jcd,
+        series:'',
+        times: v.times.slice(0,12)
       });
     }
   }catch(e){/* use hardcoded fallback */}
